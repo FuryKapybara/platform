@@ -68,16 +68,19 @@ export const GifNode = Node.create({
     return {
       insertGif:
         (attrs) =>
-          ({ commands }) => {
-            return commands.insertContent({ type: this.name, attrs })
-          }
+        ({ commands }) => {
+          return commands.insertContent({ type: this.name, attrs })
+        }
     }
   },
 
   parseHTML () {
     return [
       {
-        tag: `img[data-type="${this.name}"]`
+        // Above the default 50, so ImageNode's catch-all img[src] rule cannot claim a gif in
+        // kits where image is enabled.
+        tag: `img[data-type="${this.name}"]`,
+        priority: 60
       }
     ]
   },
