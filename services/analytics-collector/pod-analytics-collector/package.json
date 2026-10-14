@@ -67,5 +67,8 @@
     "dotenv": "^16.4.5",
     "express": "^4.21.2",
     "maxmind": "^4.3.6"
+  },
+  "bashScripts": {
+    "run-local": "cross-env APP_ID=$(cat ../../../../uberflow_private/appid) PRIVATE_KEY=\"$(cat ../../../../uberflow_private/private-key.pem)\" CLIENT_ID=$(cat ../../../../uberflow_private/client-id) CLIENT_SECRET=$(cat ../../../../uberflow_private/client-secret) SERVER_SECRET=secret ACCOUNTS_URL=http://localhost:3000/ COLLABORATOR_URL=http://localhost:3078 MINIO_ACCESS_KEY=minioadmin MINIO_SECRET_KEY=minioadmin MINIO_ENDPOINT=localhost ts-node src/index.ts"
   }
 }

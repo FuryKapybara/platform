@@ -60,5 +60,8 @@
       "require": "./lib/index.js",
       "import": "./lib/index.js"
     }
+  },
+  "bashScripts": {
+    "clean": "rm -rf lib && rm -rf types rm -rf node_modules"
   }
 }
