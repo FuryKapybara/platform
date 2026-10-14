@@ -69,8 +69,5 @@
     "@hcengineering/server-core": "workspace:^0.7.19",
     "@hcengineering/analytics": "workspace:^0.7.19",
     "@hcengineering/analytics-service": "workspace:^0.7.19"
-  },
-  "bashScripts": {
-    "run-local": "cross-env DB_URL=mongodb://localhost:27017 MINIO_ACCESS_KEY=minioadmi MINIO_SECRET_KEY=minioadmin MINIO_ENDPOINT=localhost SERVER_SECRET='secret' TRANSACTOR_URL=ws://localhost:3333 ts-node src/__start.ts"
   }
 }

@@ -61,8 +61,5 @@
     "@hcengineering/server-core": "workspace:^0.7.19",
     "postgres": "^3.4.9",
     "dotenv": "^16.4.5"
-  },
-  "bashScripts": {
-    "run-local": "cross-env QUEUE_CONFIG='localhost:19092' REGION='cockroach' ts-node src/index.ts"
   }
 }
