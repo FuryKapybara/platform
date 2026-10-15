@@ -42,12 +42,7 @@ export function reduce<TTarget extends DragTarget = DragTarget, TNode extends Ga
   // `hoveredBar` payloads through and reads their `_id`. Running the concrete
   // implementation and re-asserting the generic parameters is therefore sound —
   // whatever specific target/node the caller fed in is exactly what comes back.
-  return reduceImpl(
-    state,
-    event,
-    timeScale,
-    calendar
-  ) as unknown as DragState<TTarget, TNode>
+  return reduceImpl(state, event, timeScale, calendar) as unknown as DragState<TTarget, TNode>
 }
 
 function reduceImpl (
