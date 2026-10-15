@@ -65,11 +65,12 @@ describe('log contexts', () => {
       reportGithubCredentialError(logger, 'failed to request github access token', githubLogErrorCategory.oauthCallback)
     }
 
-    const analyticsError = (Analytics.handleError as jest.Mock).mock.calls[0][0] as Error
+    const analyticsCalls = (Analytics.handleError as jest.Mock).mock.calls
+    const analyticsError = analyticsCalls[0][0] as Error
     const loggerArguments = logger.error.mock.calls[0]
     const serializedSinks = serializeWithErrorDetails([analyticsError, loggerArguments])
 
-    expect(Analytics.handleError).toHaveBeenCalledWith(analyticsError)
+    expect(analyticsCalls).toEqual([[analyticsError]])
     expect(logger.error).toHaveBeenCalledWith('failed to request github access token', {
       error: githubLogErrorCategory.oauthCallback
     })
