@@ -53,7 +53,7 @@ function withFulltextStub (
     findAll: async (_class: any, query: any, options: any) => {
       if (query?.$search == null) return await rawFindAll(_class, query, options)
       onSearch?.(query)
-      const { $search, $searchIn, ...rest } = query
+      const { $search, ...rest } = query
       const docs = await rawFindAll(_class, rest, options)
       // Scored like the server
       const filtered = docs.filter((d: Doc) => matches.has(d._id)).map((d: Doc) => ({ ...d, $source: { $score: 1 } }))
@@ -212,29 +212,6 @@ describe('LiveQuery $search handling', () => {
     expect(findAllCalls()).toBe(before + 1)
     expect(sub.last()).toHaveLength(0)
     expect(sub.last().total).toBe(0)
-  })
-
-  it('passes $searchIn to the fulltext checks of an added and an updated doc', async () => {
-    const id = generateId<TestProject>()
-    const matches = new Set<Ref<Doc>>([id])
-    const checks: DocumentQuery<Doc>[] = []
-    const { liveQuery, factory } = await getSearchClient(matches, (query) => {
-      if (query._id !== undefined) checks.push(query)
-    })
-    await subscribe<TestProject>(liveQuery, test.class.TestProject, {
-      $search: 'foo',
-      $searchIn: ['title', 'content']
-    })
-
-    await createProject(factory, 'added', id) // handleDocAdd
-    await settle()
-    await factory.updateDoc(test.class.TestProject, core.space.Model, id, { prjName: 'edited' }) // checkSearch
-    await settle()
-
-    expect(checks).toHaveLength(2)
-    for (const check of checks) {
-      expect(check.$searchIn).toEqual(['title', 'content'])
-    }
   })
 
   it('updates a doc in place when it still matches $search after an edit', async () => {

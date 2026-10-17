@@ -291,48 +291,6 @@ describe('LiveQuery - tx arrives while the initial findAll is still in flight', 
 })
 
 describe('LiveQuery - option and LRU branches', () => {
-  it('honours $searchIn as a non-field query key when re-matching a live doc (L239)', async () => {
-    const storage = await createClient(connect)
-    // Raw mock has no fulltext engine (see search-queries.test.ts); strip $search/$searchIn
-    // before hitting it so the initial subscribe can still find the doc.
-    const rawFindAll = storage.findAll.bind(storage)
-    const stripped: Client = Object.assign(Object.create(Object.getPrototypeOf(storage)), storage, {
-      findAll: async (_class: any, query: any, options: any) => {
-        const { $search, $searchIn, ...rest } = query ?? {}
-        return await rawFindAll(_class, rest, options)
-      }
-    })
-    const liveQuery = new LiveQuery(stripped)
-    const factory = new TxOperations(storage, core.account.System)
-    storage.notify = (...tx: Tx[]) => {
-      liveQuery.tx(...tx).catch((err) => {
-        console.log(err)
-      })
-    }
-
-    const id = await createProject(factory, 'strict-target')
-    let last: TestProject[] = []
-    await new Promise<void>((resolve) => {
-      liveQuery.query<TestProject>(
-        test.class.TestProject,
-        // A directive, not a field
-        { $searchIn: ['title', 'identifier'], prjName: 'strict-target' } satisfies DocumentQuery<TestProject>,
-        (res) => {
-          last = res
-          resolve()
-        }
-      )
-    })
-    expect(last).toHaveLength(1)
-
-    // Matched as a field, $searchIn would drop the doc here
-    await factory.updateDoc(test.class.TestProject, core.space.Model, id, { description: 'updated' })
-    await settle()
-
-    expect(last).toHaveLength(1)
-    expect(last[0]._id).toBe(id)
-  })
-
   it('extends a caller-supplied projection with _class/space/modifiedOn before it reaches the server (findAll, L273)', async () => {
     const storage = await createClient(connect)
     const liveQuery = new LiveQuery(storage)
