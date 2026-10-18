@@ -1,5 +1,6 @@
 <!--
 // Copyright © 2025 Hardcore Engineering Inc.
+// Copyright © 2026 Exaviz.
 //
 // Licensed under the Eclipse Public License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License. You may
@@ -15,14 +16,14 @@
 
 <script lang="ts">
   import { onDestroy } from 'svelte'
-  import { fetchAsObjectUrl } from '../file-embed-utils'
+  import type { EmbeddableUrlResolver } from '../file-embed-utils'
   import Loading from './Loading.svelte'
 
   export let src: string
   export let name: string
   export let fit: boolean = false
   export let css: string | undefined = undefined
-  export let token: string | undefined = undefined
+  export let resolveUrl: EmbeddableUrlResolver | undefined = undefined
 
   let iframe: HTMLIFrameElement | undefined = undefined
   let iframeSrc: string | undefined
@@ -38,7 +39,7 @@
     owned = false
   }
 
-  async function loadFile(src: string, token?: string): Promise<void> {
+  async function loadFile(src: string, resolveUrl?: EmbeddableUrlResolver): Promise<void> {
     controller?.abort()
     controller = new AbortController()
     const { signal } = controller
@@ -47,7 +48,7 @@
     revokeOwned()
 
     try {
-      const result = await fetchAsObjectUrl(src, token, signal)
+      const result = (await resolveUrl?.(src, signal)) ?? { url: src, owned: false }
       if (signal.aborted) {
         if (result.owned) {
           URL.revokeObjectURL(result.url)
@@ -65,7 +66,7 @@
     }
   }
 
-  $: void loadFile(src, token)
+  $: void loadFile(src, resolveUrl)
 
   onDestroy(() => {
     controller?.abort()

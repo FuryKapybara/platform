@@ -1,5 +1,6 @@
 <!--
 // Copyright © 2024 Hardcore Engineering Inc.
+// Copyright © 2026 Exaviz.
 //
 // Licensed under the Eclipse Public License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License. You may
@@ -15,10 +16,9 @@
 <script lang="ts">
   // import { Doc } from '@hcengineering/core'
   import type { Blob, Ref } from '@hcengineering/core'
-  import { getMetadata } from '@hcengineering/platform'
   import { Button, Dialog, EmbeddedPDF, Label, Spinner } from '@hcengineering/ui'
   import { createEventDispatcher, onMount } from 'svelte'
-  import presentation, { getFileUrl } from '..'
+  import presentation, { getFileBlobUrl, getFileUrl } from '..'
   import ActionContext from './ActionContext.svelte'
   import Download from './icons/Download.svelte'
 
@@ -45,8 +45,6 @@
     }
   })
   let download: HTMLAnchorElement
-
-  const token = getMetadata(presentation.metadata.Token)
 
   $: src = file !== undefined ? getFileUrl(file, name) : undefined
 
@@ -100,7 +98,7 @@
         <img class="img-fit" {src} alt="" />
       </div>
     {:else}
-      <EmbeddedPDF {src} {name} {css} {token} fit />
+      <EmbeddedPDF {src} {name} {css} resolveUrl={getFileBlobUrl} fit />
     {/if}
   {:else}
     <div class="centered">

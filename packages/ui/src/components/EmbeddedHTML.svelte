@@ -1,5 +1,6 @@
 <!--
 // Copyright © 2026 Hardcore Engineering Inc.
+// Copyright © 2026 Exaviz.
 //
 // Licensed under the Eclipse Public License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License. You may
@@ -14,14 +15,15 @@
 -->
 
 <script lang="ts">
+  import type { EmbeddableUrlResolver } from '../file-embed-utils'
   import EmbeddedPDF from './EmbeddedPDF.svelte'
 
   export let src: string
   export let name: string
   export let fit: boolean = false
   export let css: string | undefined = undefined
-  export let token: string | undefined = undefined
+  export let resolveUrl: EmbeddableUrlResolver | undefined = undefined
 </script>
 
 <!-- css is injected into the iframe document by EmbeddedPDF (DOCX-to-HTML preview). -->
-<EmbeddedPDF {src} {name} {fit} {css} {token} />
+<EmbeddedPDF {src} {name} {fit} {css} {resolveUrl} />

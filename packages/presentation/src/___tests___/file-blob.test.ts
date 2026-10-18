@@ -1,5 +1,6 @@
 //
 // Copyright © 2026 Hardcore Engineering Inc.
+// Copyright © 2026 Exaviz.
 //
 // Licensed under the Eclipse Public License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License. You may
@@ -13,7 +14,10 @@
 // limitations under the License.
 //
 
-import { authorizationHeaders, fetchAsObjectUrl, isLocalObjectUrl } from '../file-embed-utils'
+import { setMetadata } from '@hcengineering/platform'
+
+import { authorizationHeaders, getFileBlobUrl, isLocalObjectUrl } from '../file-blob'
+import plugin from '../plugin'
 
 describe('isLocalObjectUrl', () => {
   it('accepts blob and data URLs', () => {
@@ -39,7 +43,7 @@ describe('authorizationHeaders', () => {
   })
 })
 
-describe('fetchAsObjectUrl', () => {
+describe('getFileBlobUrl', () => {
   const originalFetch = globalThis.fetch
   // eslint-disable-next-line @typescript-eslint/unbound-method
   const originalCreate = URL.createObjectURL
@@ -49,27 +53,26 @@ describe('fetchAsObjectUrl', () => {
     globalThis.fetch = jest.fn()
     createObjectUrl.mockClear()
     URL.createObjectURL = createObjectUrl
+    setMetadata(plugin.metadata.Token, 'tok')
   })
 
   afterEach(() => {
     globalThis.fetch = originalFetch
     URL.createObjectURL = originalCreate
+    setMetadata(plugin.metadata.Token, undefined)
   })
 
   it('returns local object URLs without fetching', async () => {
     const src = 'blob:https://huly.app/existing'
-    await expect(fetchAsObjectUrl(src, 'token')).resolves.toEqual({ url: src, owned: false })
+    await expect(getFileBlobUrl(src)).resolves.toEqual({ url: src, owned: false })
     expect(globalThis.fetch).not.toHaveBeenCalled()
   })
 
-  it('fetches remote files with Authorization and wraps the body in a blob URL', async () => {
+  it('fetches remote files with the session token and wraps the body in a blob URL', async () => {
     const body = new Blob(['%PDF-1.4'], { type: 'application/pdf' })
-    ;(globalThis.fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      blob: async () => body
-    })
+    ;(globalThis.fetch as jest.Mock).mockResolvedValue({ ok: true, blob: async () => body })
 
-    await expect(fetchAsObjectUrl('https://dl.huly.app/blob/ws/file', 'tok')).resolves.toEqual({
+    await expect(getFileBlobUrl('https://dl.huly.app/blob/ws/file')).resolves.toEqual({
       url: 'blob:https://huly.app/generated',
       owned: true
     })
@@ -80,24 +83,17 @@ describe('fetchAsObjectUrl', () => {
     expect(createObjectUrl).toHaveBeenCalledWith(body)
   })
 
-  it('does not send credentials via the Authorization header when no token is given', async () => {
-    ;(globalThis.fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      blob: async () => new Blob(['x'])
-    })
+  it('sends no Authorization header when there is no session token', async () => {
+    setMetadata(plugin.metadata.Token, undefined)
+    ;(globalThis.fetch as jest.Mock).mockResolvedValue({ ok: true, blob: async () => new Blob(['x']) })
 
-    await fetchAsObjectUrl('/files/ws/file')
-    expect(globalThis.fetch).toHaveBeenCalledWith('/files/ws/file', {
-      headers: {},
-      signal: undefined
-    })
+    await getFileBlobUrl('/files/ws/file')
+    expect(globalThis.fetch).toHaveBeenCalledWith('/files/ws/file', { headers: {}, signal: undefined })
   })
 
   it('throws when the file server rejects the request', async () => {
     ;(globalThis.fetch as jest.Mock).mockResolvedValue({ ok: false, status: 401 })
-    await expect(fetchAsObjectUrl('https://dl.huly.app/blob/ws/file', 'tok')).rejects.toThrow(
-      'Failed to fetch file: 401'
-    )
+    await expect(getFileBlobUrl('https://dl.huly.app/blob/ws/file')).rejects.toThrow('Failed to fetch file: 401')
     expect(createObjectUrl).not.toHaveBeenCalled()
   })
 })
