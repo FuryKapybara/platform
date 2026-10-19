@@ -22,11 +22,12 @@ import calendar, {
   calendarIntegrationKind
 } from '@hcengineering/calendar'
 import { Client, MeasureContext, Ref, TxOperations } from '@hcengineering/core'
-import { areEqualMarkups, htmlToMarkup, isEmptyMarkup, jsonToHTML, markupToJSON } from '@hcengineering/text'
+import { htmlToMarkup, jsonToHTML, markupToJSON } from '@hcengineering/text'
 import { deepEqual } from 'fast-equals'
 import { OAuth2Client } from 'google-auth-library'
 import { calendar_v3 } from 'googleapis'
 import { getRateLimitter, RateLimiter } from './rateLimiter'
+import { shouldPushDescriptionUpdate } from './description'
 import { type Token } from './types'
 import {
   convertDate,
@@ -342,10 +343,7 @@ export class CalendarClient {
     }
     const description = jsonToHTML(markupToJSON(current.description))
     const originMarkup = htmlToMarkup(event.description ?? '')
-    if (
-      isEmptyMarkup(description) !== isEmptyMarkup(originMarkup) &&
-      !areEqualMarkups(current.description, originMarkup)
-    ) {
+    if (shouldPushDescriptionUpdate(current.description, originMarkup)) {
       res = true
       this.ctx.info('Update event diff: description', {
         calendarId: current.calendar,
