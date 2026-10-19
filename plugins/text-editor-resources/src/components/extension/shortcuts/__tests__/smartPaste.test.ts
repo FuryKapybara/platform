@@ -15,7 +15,7 @@
 import { Schema } from '@tiptap/pm/model'
 import { EditorState, NodeSelection, TextSelection } from '@tiptap/pm/state'
 
-import { PasteTextAsMarkdownPlugin } from '../smartPaste'
+import { normalizeSlackPastedHTML, PasteTextAsMarkdownPlugin } from '../smartPaste'
 
 jest.mock('@hcengineering/text', () => ({
   __esModule: true,
@@ -241,5 +241,28 @@ describe('SmartPaste handlePaste transform scenarios', () => {
 
     expect(handled).toBe(true)
     expect(dispatch).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('normalizeSlackPastedHTML', () => {
+  it.each([
+    ['document', '<div data-stringify-type="paragraph">First line\nSecond line\nThird line</div>'],
+    ['comment', '<span data-stringify-type="paragraph">First line\nSecond line\nThird line</span>']
+  ])('preserves multi-line Slack snippets pasted into a %s', (_editor, html) => {
+    const expected = html.replace(/\n/g, '<br>')
+
+    expect(normalizeSlackPastedHTML(html)).toBe(expected)
+  })
+
+  it('does not treat a self-closing Slack element as surrounding content', () => {
+    const html = '<br data-stringify-type="paragraph-break"/>\n<div>Outside Slack\ncontent</div>'
+
+    expect(normalizeSlackPastedHTML(html)).toBe(html)
+  })
+
+  it('leaves non-Slack HTML unchanged', () => {
+    const html = '<div>First line\nSecond line</div>'
+
+    expect(normalizeSlackPastedHTML(html)).toBe(html)
   })
 })

@@ -32,6 +32,8 @@ export const SmartPasteExtension = Extension.create({
 export function PasteTextAsMarkdownPlugin (): Plugin {
   return new Plugin({
     props: {
+      transformPastedHTML: normalizeSlackPastedHTML,
+
       handlePaste (view, event, slice) {
         const clipboardData = event.clipboardData
         if (clipboardData === null) return false
@@ -83,6 +85,41 @@ export function PasteTextAsMarkdownPlugin (): Plugin {
       }
     }
   })
+}
+
+export function normalizeSlackPastedHTML (html: string): string {
+  if (!html.includes('data-stringify-type')) return html
+
+  const tagStack: boolean[] = []
+  let slackContentDepth = 0
+
+  return html
+    .split(/(<[^>]*>)/)
+    .map((part) => {
+      const openingTag = /^<([a-z][\w:-]*)\b[^>]*>$/i.exec(part)
+      if (openingTag !== null) {
+        const isSlackContent = /\sdata-stringify-type(?:\s|=|>)/i.test(part)
+        const isVoidElement = /\/>$/.test(part) || ['br', 'img', 'meta'].includes(openingTag[1].toLowerCase())
+
+        if (!isVoidElement) {
+          tagStack.push(isSlackContent)
+          if (isSlackContent) {
+            slackContentDepth++
+          }
+        }
+        return part
+      }
+
+      if (/^<\/[a-z][\w:-]*\s*>$/i.test(part)) {
+        if (tagStack.pop() === true) {
+          slackContentDepth--
+        }
+        return part
+      }
+
+      return slackContentDepth > 0 ? part.replace(/\r\n?|\n/g, '<br>') : part
+    })
+    .join('')
 }
 
 const importantMarkupNodeTypes = new Set<MarkupNodeType>([
