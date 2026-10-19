@@ -39,6 +39,8 @@ export function parseMessageMarkdown (
     return htmlToJSON(html, extensions)
   }
   const parser = new MarkdownParser({ refUrl, imageUrl, htmlParser })
+  parser.tokenizer.set({ linkify: true })
+  parser.tokenizer.linkify.set({ fuzzyLink: false, fuzzyEmail: false })
   const json = parser.parse(message ?? '')
   return json
 }
