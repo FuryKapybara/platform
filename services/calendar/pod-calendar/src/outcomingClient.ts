@@ -23,11 +23,12 @@ import calendar, {
 } from '@hcengineering/calendar'
 import contact, { Contact } from '@hcengineering/contact'
 import core, { MeasureContext, Ref, SocialIdType, TxOperations, WorkspaceUuid } from '@hcengineering/core'
-import { areEqualMarkups, htmlToMarkup, isEmptyMarkup, jsonToHTML, markupToJSON } from '@hcengineering/text'
+import { htmlToMarkup, jsonToHTML, markupToJSON } from '@hcengineering/text'
 import { deepEqual } from 'fast-equals'
 import { OAuth2Client } from 'google-auth-library'
 import { calendar_v3 } from 'googleapis'
 import { getClient } from './client'
+import { shouldPushDescriptionUpdate } from './description'
 import { setSyncHistory } from './kvsUtils'
 import { lock, synced } from './mutex'
 import { getRateLimitter, RateLimiter } from './rateLimiter'
@@ -260,10 +261,7 @@ export class OutcomingClient {
     }
     const description = jsonToHTML(markupToJSON(current.description))
     const originMarkup = htmlToMarkup(event.description ?? '')
-    if (
-      isEmptyMarkup(description) !== isEmptyMarkup(originMarkup) &&
-      !areEqualMarkups(current.description, originMarkup)
-    ) {
+    if (shouldPushDescriptionUpdate(current.description, originMarkup)) {
       res = true
       this.ctx.info('Update event diff: description', {
         calendarId: current.calendar,
