@@ -2,9 +2,9 @@
 // Copyright © 2024 Hardcore Engineering Inc.
 //
 import { MeasureContext } from '@hcengineering/core'
-import { type BrowserContext, type Page, type Viewport } from 'puppeteer'
+import { type Page, type Viewport } from 'puppeteer'
 
-import { type PrintBrowserManager } from './browser'
+import { type PrintBrowserManager, type PrintBrowserPage, withTimeout } from './browser'
 import config from './config'
 import { Semaphore } from './semaphore'
 
@@ -39,91 +39,98 @@ export async function print (
   const orientation = options?.orientation ?? 'portrait'
   const viewport = options?.viewport ?? { width: 1440, height: 900 }
   const release = await printSemaphore.acquire()
-
-  let context: BrowserContext | undefined
-  let page: Page | undefined
+  let browserPage: PrintBrowserPage | undefined
 
   try {
     ctx.info('print', { url, kind, orientation, viewport })
 
-    const browserPage = await browserManager.createPage()
-    context = browserPage.context
-    page = browserPage.page
-    const currentPage = page
+    browserPage = await browserManager.createPage()
+    const job = render(ctx, browserPage.page, url, kind, orientation, viewport)
+    // After a timeout the job is abandoned; closing its context makes the pending
+    // puppeteer calls reject, which must not surface as an unhandled rejection.
+    job.catch(() => {})
 
-    currentPage
-      .on('pageerror', (err: unknown) => {
-        const message = err instanceof Error ? err.message : String(err)
-        ctx.warn('pageerror', { message })
-      })
-      .on('requestfailed', (request) => {
-        ctx.warn('requestfailed', { url: request.url(), errorText: request.failure()?.errorText })
-      })
-
-    await currentPage.setViewport(viewport)
-
-    // NOTE: Issues opened with a guest link worked fine only with networkidle0 here and
-    // waitForNetworkIdle 1000 afterwards. Also tried 700 but sometimes it was not enough.
-    await currentPage.goto(url, {
-      waitUntil: ['domcontentloaded', 'networkidle0']
-    })
-    await currentPage.waitForNetworkIdle({ idleTime: 1000 })
-
-    let res: Uint8Array | undefined
-
-    if (kind === 'pdf') {
-      await currentPage.emulateMediaType('print')
-      // Scroll throught the page to render all the content (e.g. as images are only rendered
-      // when they are visible in the viewport)
-      await scrollThrough(currentPage)
-
-      // Read page header and footer if defined
-      const pageHeader = await currentPage.evaluate(() => {
-        const header = document.querySelector('#page-header')
-        return header?.innerHTML ?? ''
-      })
-
-      const pageFooter = await currentPage.evaluate(() => {
-        const footer = document.querySelector('#page-footer')
-        return footer?.innerHTML ?? ''
-      })
-
-      const displayHeaderFooter = pageHeader !== '' || pageFooter !== ''
-
-      res = await ctx.with('pdf', {}, () =>
-        currentPage.pdf({
-          format: 'A4',
-          landscape: orientation === 'landscape',
-          timeout: 0,
-          headerTemplate: pageHeader,
-          footerTemplate: pageFooter,
-          displayHeaderFooter,
-          margin: {
-            top: '1.5cm',
-            right: '1cm',
-            bottom: '1.5cm',
-            left: '1cm'
-          }
-        })
-      )
-    } else {
-      // Note: currently we do not take the full page screenshot - only the viewport
-      // might make it configurable in the future
-      res = await ctx.with('screenshot', { kind }, () => currentPage.screenshot({ type: kind }))
-    }
-
-    return res !== undefined ? Buffer.from(res) : undefined
+    return await withTimeout(job, config.PrintTimeoutMs, `Print timed out after ${config.PrintTimeoutMs} ms`)
   } finally {
     try {
-      if (context !== undefined) {
-        await context.close()
-      } else if (page !== undefined) {
-        await page.close()
-      }
+      await browserPage?.release()
     } finally {
       release()
     }
   }
+}
+
+async function render (
+  ctx: MeasureContext,
+  page: Page,
+  url: string,
+  kind: ExportKind,
+  orientation: PageOrientation,
+  viewport: Viewport
+): Promise<Buffer | undefined> {
+  page
+    .on('pageerror', (err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err)
+      ctx.warn('pageerror', { message })
+    })
+    .on('requestfailed', (request) => {
+      ctx.warn('requestfailed', { url: request.url(), errorText: request.failure()?.errorText })
+    })
+
+  await page.setViewport(viewport)
+
+  // NOTE: Issues opened with a guest link worked fine only with networkidle0 here and
+  // waitForNetworkIdle 1000 afterwards. Also tried 700 but sometimes it was not enough.
+  await page.goto(url, {
+    waitUntil: ['domcontentloaded', 'networkidle0']
+  })
+  await page.waitForNetworkIdle({ idleTime: 1000 })
+
+  let res: Uint8Array | undefined
+
+  if (kind === 'pdf') {
+    await page.emulateMediaType('print')
+    // Scroll throught the page to render all the content (e.g. as images are only rendered
+    // when they are visible in the viewport)
+    await scrollThrough(page)
+
+    // Read page header and footer if defined
+    const pageHeader = await page.evaluate(() => {
+      const header = document.querySelector('#page-header')
+      return header?.innerHTML ?? ''
+    })
+
+    const pageFooter = await page.evaluate(() => {
+      const footer = document.querySelector('#page-footer')
+      return footer?.innerHTML ?? ''
+    })
+
+    const displayHeaderFooter = pageHeader !== '' || pageFooter !== ''
+
+    // No own pdf timeout: the whole job is bounded by PrintTimeoutMs
+    res = await ctx.with('pdf', {}, () =>
+      page.pdf({
+        format: 'A4',
+        landscape: orientation === 'landscape',
+        timeout: 0,
+        headerTemplate: pageHeader,
+        footerTemplate: pageFooter,
+        displayHeaderFooter,
+        margin: {
+          top: '1.5cm',
+          right: '1cm',
+          bottom: '1.5cm',
+          left: '1cm'
+        }
+      })
+    )
+  } else {
+    // Note: currently we do not take the full page screenshot - only the viewport
+    // might make it configurable in the future
+    res = await ctx.with('screenshot', { kind }, () => page.screenshot({ type: kind }))
+  }
+
+  return res !== undefined ? Buffer.from(res) : undefined
 }
 
 async function scrollThrough (page: Page): Promise<void> {

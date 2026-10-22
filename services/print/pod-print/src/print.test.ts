@@ -85,16 +85,20 @@ function createBrowser (pageFactory: () => any = () => createPage(), overrides: 
 
 async function loadPrintModule (
   launch: jest.Mock,
-  printConcurrency = '1'
+  printConcurrency = '1',
+  env: Record<string, string> = {}
 ): Promise<{
-    print: (ctx: MeasureContext, url: string, options?: import('./print').PrintOptions) => Promise<Buffer | undefined>
-    closePrintBrowser: () => Promise<void>
-  }> {
+  print: (ctx: MeasureContext, url: string, options?: import('./print').PrintOptions) => Promise<Buffer | undefined>
+  closePrintBrowser: () => Promise<void>
+}> {
   jest.resetModules()
   process.env.SECRET = 'secret'
   process.env.ACCOUNTS_URL = 'http://accounts'
   process.env.FRONT_URL = 'http://front'
   process.env.PRINT_CONCURRENCY = printConcurrency
+  for (const [key, value] of Object.entries(env)) {
+    process.env[key] = value
+  }
 
   jest.doMock('puppeteer', () => ({
     __esModule: true,
@@ -119,6 +123,9 @@ describe('print', () => {
   afterEach(() => {
     jest.dontMock('puppeteer')
     delete process.env.PRINT_CONCURRENCY
+    delete process.env.PRINT_TIMEOUT_MS
+    delete process.env.PRINT_PAGE_INIT_TIMEOUT_MS
+    delete process.env.PRINT_BROWSER_MAX_PAGES
   })
 
   it('reuses the same browser for sequential print jobs', async () => {
@@ -226,5 +233,115 @@ describe('print', () => {
     await closePrintBrowser()
 
     expect(browser.close).toHaveBeenCalledTimes(1)
+  })
+
+  it('times out a hung print job and keeps serving later jobs', async () => {
+    let pageCount = 0
+    const browser = createBrowser(() => {
+      pageCount++
+      // The first page never finishes rendering
+      return createPage(pageCount === 1 ? { pdf: jest.fn(() => new Promise(() => {})) } : {})
+    })
+    const launch = jest.fn().mockResolvedValue(browser)
+    const { closePrintBrowser, print } = await loadPrintModule(launch, '1', { PRINT_TIMEOUT_MS: '50' })
+
+    await expect(print(createCtx(), 'http://example.com/hung')).rejects.toThrow('Print timed out after 50 ms')
+    expect(browser.contexts[0].close).toHaveBeenCalledTimes(1)
+
+    await expect(print(createCtx(), 'http://example.com/next')).resolves.toEqual(Buffer.from('pdf'))
+    expect(launch).toHaveBeenCalledTimes(1)
+    expect(browser.close).not.toHaveBeenCalled()
+
+    await closePrintBrowser()
+  })
+
+  it('does not kill running jobs when another job cannot create a page', async () => {
+    const firstPdf = deferred<Buffer>()
+    const firstBrowser = createBrowser(() => createPage({ pdf: jest.fn(() => firstPdf.promise) }))
+    const secondBrowser = createBrowser()
+    const launch = jest.fn().mockResolvedValueOnce(firstBrowser).mockResolvedValueOnce(secondBrowser)
+    const { closePrintBrowser, print } = await loadPrintModule(launch, '2')
+
+    const first = print(createCtx(), 'http://example.com/one')
+    await flush()
+    expect(firstBrowser.createBrowserContext).toHaveBeenCalledTimes(1)
+
+    firstBrowser.createBrowserContext.mockRejectedValueOnce(new Error('browser is not responding'))
+    await print(createCtx(), 'http://example.com/two')
+
+    // The broken browser is retired, but stays open for the running job
+    expect(launch).toHaveBeenCalledTimes(2)
+    expect(secondBrowser.createBrowserContext).toHaveBeenCalledTimes(1)
+    expect(firstBrowser.close).not.toHaveBeenCalled()
+    expect(firstBrowser.contexts[0].close).not.toHaveBeenCalled()
+
+    firstPdf.resolve(Buffer.from('first'))
+    await expect(first).resolves.toEqual(Buffer.from('first'))
+
+    // Closed once its last page is released
+    expect(firstBrowser.close).toHaveBeenCalledTimes(1)
+    expect(secondBrowser.close).not.toHaveBeenCalled()
+
+    await closePrintBrowser()
+  })
+
+  it('uses the configured page init timeout', async () => {
+    const firstBrowser = createBrowser()
+    const secondBrowser = createBrowser()
+    firstBrowser.createBrowserContext.mockImplementationOnce(() => new Promise(() => {}))
+    const launch = jest.fn().mockResolvedValueOnce(firstBrowser).mockResolvedValueOnce(secondBrowser)
+    const { closePrintBrowser, print } = await loadPrintModule(launch, '1', { PRINT_PAGE_INIT_TIMEOUT_MS: '20' })
+
+    await expect(print(createCtx(), 'http://example.com/one')).resolves.toEqual(Buffer.from('pdf'))
+
+    expect(launch).toHaveBeenCalledTimes(2)
+    expect(firstBrowser.close).toHaveBeenCalledTimes(1)
+    expect(secondBrowser.createBrowserContext).toHaveBeenCalledTimes(1)
+
+    await closePrintBrowser()
+  })
+
+  it('retires the browser when a page context cannot be closed', async () => {
+    let pageCount = 0
+    const firstBrowser = createBrowser()
+    const secondBrowser = createBrowser()
+    firstBrowser.createBrowserContext.mockImplementationOnce(async () => {
+      pageCount++
+      const page = createPage()
+      const context = { page, newPage: jest.fn(async () => page), close: jest.fn(() => new Promise(() => {})) }
+      firstBrowser.contexts.push(context)
+      return context
+    })
+    const launch = jest.fn().mockResolvedValueOnce(firstBrowser).mockResolvedValueOnce(secondBrowser)
+    const { closePrintBrowser, print } = await loadPrintModule(launch, '1', { PRINT_PAGE_INIT_TIMEOUT_MS: '20' })
+
+    await print(createCtx(), 'http://example.com/one')
+    expect(pageCount).toBe(1)
+    expect(firstBrowser.close).toHaveBeenCalledTimes(1)
+
+    await print(createCtx(), 'http://example.com/two')
+    expect(launch).toHaveBeenCalledTimes(2)
+    expect(secondBrowser.createBrowserContext).toHaveBeenCalledTimes(1)
+
+    await closePrintBrowser()
+  })
+
+  it('recycles the browser after PRINT_BROWSER_MAX_PAGES pages', async () => {
+    const firstBrowser = createBrowser()
+    const secondBrowser = createBrowser()
+    const launch = jest.fn().mockResolvedValueOnce(firstBrowser).mockResolvedValueOnce(secondBrowser)
+    const { closePrintBrowser, print } = await loadPrintModule(launch, '1', { PRINT_BROWSER_MAX_PAGES: '2' })
+
+    await print(createCtx(), 'http://example.com/one')
+    await print(createCtx(), 'http://example.com/two')
+    expect(firstBrowser.close).toHaveBeenCalledTimes(1)
+
+    await print(createCtx(), 'http://example.com/three')
+    expect(launch).toHaveBeenCalledTimes(2)
+    expect(firstBrowser.createBrowserContext).toHaveBeenCalledTimes(2)
+    expect(secondBrowser.createBrowserContext).toHaveBeenCalledTimes(1)
+
+    await closePrintBrowser()
+    expect(secondBrowser.close).toHaveBeenCalledTimes(1)
   })
 })
