@@ -37,7 +37,14 @@ function main() {
       console.log('"0.6.0"')
       return
     }
-    console.log(`"${stdout.trim()}"`)
+    // Tags look like v0.7.428, s0.7.327 or v0.7.428-pc73; print x.y.z
+    const parts = stdout.trim().replace(/^[^0-9]+/, '').split('.')
+    const [major, minor, patch] = parts.map((it) => parseInt(it))
+    if (parts.length !== 3 || [major, minor, patch].some((it) => Number.isNaN(it))) {
+      console.log('"0.6.0"')
+      return
+    }
+    console.log(`"${major}.${minor}.${patch}"`)
   })
 }
 
