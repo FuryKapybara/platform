@@ -113,10 +113,17 @@ div.backd .panel-base.panel a.selected {
   color: #ffffff !important;
 }
 
-/* ── 5. Статус-бар (часы сверху): белый на фото-фоне ── */
+/* ── 5. Статус-бар (часы сверху): прозрачный на фото-фоне; фото — на весь экран ── */
 #ui-root .antiStatusBar,
 #ui-root .antiStatusBar button {
   color: rgba(255, 255, 255, 0.85) !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+div.backd img.back-image {
+  top: 0 !important;
+  height: 100% !important;
 }
 
 /* ── 6. Мобилка (<=768px, панель без .panel): lime-тёмный фон + стекло ── */
