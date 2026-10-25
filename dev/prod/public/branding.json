@@ -135,5 +135,52 @@
         "href": "/tracex/favicon_192.png"
       }
     ]
+  },
+  "crm.mudromashina.ru": {
+    "title": "Мудромашина",
+    "languages": "ru,en",
+    "defaultLanguage": "ru",
+    "defaultApplication": "tracker",
+    "defaultSpace": "tracker:project:DefaultProject",
+    "defaultSpecial": "issues",
+    "lastNameFirst": "true",
+    "links": [
+      {
+        "rel": "manifest",
+        "href": "/huly/site.webmanifest"
+      },
+      {
+        "rel": "icon",
+        "href": "/huly/favicon.svg",
+        "type": "image/svg+xml"
+      },
+      {
+        "rel": "icon",
+        "type": "image/png",
+        "sizes": "96x96",
+        "href": "/huly/favicon-96x96.png"
+      },
+      {
+        "rel": "icon",
+        "type": "image/png",
+        "sizes": "32x32",
+        "href": "/huly/favicon-32x32.png"
+      },
+      {
+        "rel": "icon",
+        "type": "image/png",
+        "sizes": "16x16",
+        "href": "/huly/favicon-16x16.png"
+      },
+      {
+        "rel": "shortcut icon",
+        "href": "/huly/favicon.ico",
+        "sizes": "any"
+      },
+      {
+        "rel": "apple-touch-icon",
+        "href": "/huly/apple-touch-icon.png"
+      }
+    ]
   }
 }
