@@ -1,0 +1,141 @@
+/* ============================================================
+   MM-AUTH — «Мудромашина» брендинг auth-страницы (DEV-2510-05, Фаза 2)
+   Подключается ТОЛЬКО в login.html (не влияет на workbench).
+   Референс: rzf-ui dark+lime punch (#d5ff40 / hover #e0ff66 / active #c0ff20).
+   Селекторы — по живому DOM прода (recon DEV-2510-05):
+     шейп div.backd > div.bg-image > div.panel-base.panel
+     кнопка button.antiButton.contrast
+     лого div.flex-row-center[style*=fixed] > svg + span.fs-title
+   Всё через !important: стили бандла инжектятся в <head> ПОСЛЕ этой ссылки.
+   ============================================================ */
+
+/* ── 1. Лого: SVG-Huly скрыть, «М»-иконка + текст «Мудромашина» ── */
+div.flex-row-center[style*='fixed'] svg {
+  display: none !important;
+}
+div.flex-row-center[style*='fixed'] .fs-title {
+  font-size: 1.3rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em;
+  color: #ffffff !important;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.6);
+}
+div.flex-row-center[style*='fixed'] .fs-title::before {
+  content: '';
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  margin-right: 10px;
+  border-radius: 7px;
+  vertical-align: -9px;
+  background: url('/mm-auth/mm-logo-m.png') center / contain no-repeat;
+  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.55));
+}
+
+/* ── 2. Шейп auth: приглушённый lime + глассморфизм ── */
+div.backd .panel-base.panel {
+  background: rgba(213, 255, 64, 0.12) !important;
+  backdrop-filter: blur(26px) saturate(1.25) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(1.25) !important;
+  border-radius: 24px !important;
+  box-shadow:
+    0 32px 80px rgba(0, 0, 0, 0.5),
+    0 6px 24px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+  /* dark-набор переменных ВНУТРИ панели: текст/инпуты читаемы на тёмном стекле
+     (класс .white светлой темы перекрыт наследованием — .panel ближе в DOM) */
+  --theme-caption-color: #ffffff;
+  --theme-content-color: rgba(255, 255, 255, 0.82);
+  --theme-dark-color: rgba(255, 255, 255, 0.6);
+  --theme-darker-color: rgba(255, 255, 255, 0.45);
+  --theme-halfcontent-color: rgba(255, 255, 255, 0.5);
+  --theme-link-color: #d5ff40;
+  --theme-caret-color: #d5ff40;
+  --theme-button-default: rgba(255, 255, 255, 0.05);
+  --theme-button-pressed: rgba(255, 255, 255, 0.12);
+  --theme-button-focused: rgba(255, 255, 255, 0.08);
+  --theme-button-border: rgba(213, 255, 64, 0.28);
+  --theme-list-divider-color: rgba(213, 255, 64, 0.35);
+}
+/* нижний слой стекла (::after, синий radial в исходнике) → lime-тонированный тёмный градиент */
+div.backd .panel-base.panel::after {
+  background:
+    linear-gradient(150deg, rgba(213, 255, 64, 0.17) 0%, rgba(10, 13, 5, 0.42) 46%, rgba(213, 255, 64, 0.11) 100%),
+    radial-gradient(161.92% 96.11% at 11.33% 3.89%, #2a3313 0%, #10140a 100%) !important;
+  border-radius: inherit !important;
+}
+/* conic-рамка (::before) → lime-свечение */
+div.backd .panel-base.panel::before {
+  background: linear-gradient(
+      135deg,
+      rgba(213, 255, 64, 0.6),
+      rgba(255, 255, 255, 0.16) 32%,
+      rgba(213, 255, 64, 0.38) 58%,
+      rgba(255, 255, 255, 0.1) 78%,
+      rgba(213, 255, 64, 0.45)
+    )
+    border-box !important;
+  border-radius: inherit !important;
+}
+
+/* ── 3. Кнопки: lime punch + чёрный шрифт (не сливается) ── */
+div.backd button.antiButton.contrast {
+  background-color: #d5ff40 !important;
+  border-color: #d5ff40 !important;
+  color: #06070a !important;
+  font-weight: 600 !important;
+  text-shadow: none !important;
+  box-shadow: 0 10px 28px rgba(213, 255, 64, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+}
+div.backd button.antiButton.contrast:hover {
+  background-color: #e0ff66 !important;
+}
+div.backd button.antiButton.contrast:active,
+div.backd button.antiButton.contrast.pressed {
+  background-color: #c0ff20 !important;
+}
+div.backd button.antiButton.contrast:disabled {
+  background-color: rgba(213, 255, 64, 0.22) !important;
+  border-color: transparent !important;
+  color: rgba(0, 0, 0, 0.4) !important;
+  box-shadow: none !important;
+}
+
+/* ── 4. Ссылки панели (табы/Восстановить/Войти с кодом/гость): светлые + lime-hover ── */
+div.backd .panel-base.panel a {
+  color: rgba(255, 255, 255, 0.82) !important;
+  transition: color 0.15s ease;
+}
+div.backd .panel-base.panel a:hover {
+  color: #d5ff40 !important;
+}
+div.backd .panel-base.panel a.selected {
+  color: #ffffff !important;
+}
+
+/* ── 5. Статус-бар (часы сверху): белый на фото-фоне ── */
+#ui-root .antiStatusBar,
+#ui-root .antiStatusBar button {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* ── 6. Мобилка (<=768px, панель без .panel): lime-тёмный фон + стекло ── */
+div.backd.paneld {
+  background: linear-gradient(160deg, #141a09 0%, #1c240e 55%, #0c1006 100%) !important;
+}
+div.backd.paneld .panel-base {
+  background: rgba(213, 255, 64, 0.1) !important;
+  backdrop-filter: blur(22px) saturate(1.2) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(1.2) !important;
+  border-radius: 20px !important;
+  --theme-caption-color: #ffffff;
+  --theme-content-color: rgba(255, 255, 255, 0.82);
+  --theme-dark-color: rgba(255, 255, 255, 0.6);
+  --theme-link-color: #d5ff40;
+  --theme-caret-color: #d5ff40;
+  --theme-button-default: rgba(255, 255, 255, 0.05);
+  --theme-button-pressed: rgba(255, 255, 255, 0.12);
+  --theme-button-focused: rgba(255, 255, 255, 0.08);
+  --theme-button-border: rgba(213, 255, 64, 0.28);
+  --theme-list-divider-color: rgba(213, 255, 64, 0.35);
+}
