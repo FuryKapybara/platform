@@ -1,13 +1,33 @@
 /* ============================================================
-   MM-AUTH — «Мудромашина» брендинг auth-страницы (DEV-2510-05, Фаза 2)
-   Подключается ТОЛЬКО в login.html (не влияет на workbench).
+   MM-AUTH — «Мудромашина» брендинг auth-страницы (DEV-2510-05/06/07, Фаза 2+3)
+   Подключается в login.html И index.html (один SPA-шаблон, готча №14).
    Референс: rzf-ui dark+lime punch (#d5ff40 / hover #e0ff66 / active #c0ff20).
-   Селекторы — по живому DOM прода (recon DEV-2510-05):
+   Селекторы — по живому DOM прода (recon DEV-2510-05/07):
      шейп div.backd > div.bg-image > div.panel-base.panel
      кнопка button.antiButton.contrast
      лого div.flex-row-center[style*=fixed] > svg + span.fs-title
+     соц-слот: пустой div.grid[style*=repeat(2, 1fr)] (сюда mm-auth.js вставляет Яндекс/Сбер)
+     гость: .actions > .login-as-guest a
    Всё через !important: стили бандла инжектятся в <head> ПОСЛЕ этой ссылки.
    ============================================================ */
+
+/* ── 0. Шрифт вордмарка: Cormorant 600 (DEV-2510-07, cyrillic+latin subsets) ── */
+@font-face {
+  font-family: 'Cormorant';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/mm-auth/fonts/cormorant-cyrillic-600-normal.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Cormorant';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/mm-auth/fonts/cormorant-latin-600-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 
 /* ── 1. Лого: SVG-Huly скрыть, «М»-иконка + текст «Мудромашина» ──
    DEV-2510-06: текст меньше (1.05rem), иконка больше (44px), выравнивание —
@@ -17,14 +37,15 @@ div.backd .bg-image > .flex-row-center[style*='fixed'] svg {
   display: none !important;
 }
 div.backd .bg-image > .flex-row-center[style*='fixed'] .fs-title {
-  font-size: 1.05rem !important;
+  font-family: 'Cormorant', 'IBM Plex Sans', serif !important;
+  font-size: 1.3rem !important;
   font-weight: 600 !important;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.04em;
   color: #ffffff !important;
   text-shadow: 0 2px 14px rgba(0, 0, 0, 0.6);
   display: inline-flex !important;
   align-items: center !important;
-  gap: 12px !important;
+  gap: 7px !important;
   margin-left: 0 !important;
   line-height: 1 !important;
 }
@@ -144,8 +165,15 @@ div.backd img.back-image {
   object-fit: cover !important;
   object-position: center center !important;
 }
+/* DEV-2510-07: фон-арт — ПУЛЕНЕПРОБИВАЕМЫЙ: <picture> бандла прячем целиком (его md5-URL
+   кэшируется браузером на ГОД и Ctrl+Shift+R в SPA не бастит runtime-инжекнутые картинки —
+   именно поэтому владелец видел старый синий арт). Наш арт отдаём из НОВОГО URL
+   /mm-auth/bg-go.webp (никогда не кэшировался) через CSS-фон .bg-image */
+div.backd img.back-image {
+  display: none !important;
+}
 div.backd .bg-image {
-  background: #0a0d06 url('/img/5731352d5d0e5216002640f98ed67570.webp') center / cover no-repeat !important;
+  background: #0a0d06 url('/mm-auth/bg-go.webp') center / cover no-repeat !important;
 }
 
 /* ── 6. Мобилка (<=768px, панель без .panel): lime-тёмный градиент ПОВЕРХ арта фона ──
@@ -158,7 +186,7 @@ div.backd.paneld {
 div.backd.paneld .bg-image {
   background:
     linear-gradient(160deg, rgba(16, 22, 8, 0.86) 0%, rgba(28, 36, 14, 0.9) 55%, rgba(10, 14, 5, 0.94) 100%),
-    url('/img/5731352d5d0e5216002640f98ed67570.webp') center / cover no-repeat !important;
+    url('/mm-auth/bg-go.webp') center / cover no-repeat !important;
 }
 div.backd.paneld img.back-image {
   display: none !important;
@@ -178,4 +206,72 @@ div.backd.paneld .panel-base {
   --theme-button-focused: rgba(255, 255, 255, 0.08);
   --theme-button-border: rgba(213, 255, 64, 0.28);
   --theme-list-divider-color: rgba(213, 255, 64, 0.35);
+}
+
+/* ── 7. Кнопки провайдеров Яндекс ID / Сбер ID (DEV-2510-07, Фаза 3: HTML-only заглушки).
+   DOM создаёт /mm-auth/mm-auth.js — вставляет 2 кнопки в родной пустой grid соц-слота ── */
+div.backd .panel-base.panel .grid[data-mm-providers] {
+  display: grid !important; /* страховка: бандл-класс .grid может не доехать */
+  margin-top: 0.35rem !important;
+}
+div.backd .panel-base.panel button.mm-provider {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 9px !important;
+  width: 100% !important;
+  min-height: 46px !important;
+  padding: 0 0.75rem !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(213, 255, 64, 0.3) !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+  color: rgba(255, 255, 255, 0.88) !important;
+  font-size: 0.92rem !important;
+  font-weight: 500 !important;
+  text-shadow: none !important;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+div.backd .panel-base.panel button.mm-provider:hover {
+  background: rgba(213, 255, 64, 0.1) !important;
+  border-color: rgba(213, 255, 64, 0.55) !important;
+  color: #ffffff !important;
+}
+div.backd .panel-base.panel button.mm-provider .mm-p-ico {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+div.backd .panel-base.panel button.mm-provider .mm-p-ico svg {
+  width: 19px;
+  height: 19px;
+}
+
+/* ── 8. Гостевая кнопка — крупная (DEV-2510-07, Фаза 3).
+   Блок .actions в бандле имеет inline margin-inline-start: 5rem — сбрасываем ── */
+div.backd .panel-base.panel .actions {
+  margin-inline-start: 0 !important;
+  width: 100%;
+}
+div.backd .panel-base.panel .actions .login-as-guest a {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  min-height: 48px !important;
+  margin-top: 0.45rem;
+  padding: 0 1rem !important;
+  background: rgba(213, 255, 64, 0.07) !important;
+  border: 1px solid rgba(213, 255, 64, 0.45) !important;
+  border-radius: 12px !important;
+  color: #ffffff !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  text-shadow: none !important;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+div.backd .panel-base.panel .actions .login-as-guest a:hover {
+  background: rgba(213, 255, 64, 0.16) !important;
+  border-color: #d5ff40 !important;
+  color: #d5ff40 !important;
 }
