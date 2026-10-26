@@ -92,6 +92,17 @@
     return b
   }
 
+  // ── П.3 (DEV-2510-08): фирменная ТЁМНАЯ тема воркбенча.
+  //    Huly по умолчанию 'theme-system' → у зрителей со светлой ОС светлая
+  //    тема и синие акценты. Бренд «Мудромашины» тёмный (dark+lime, референс
+  //    auth/лендинг): форсим theme-dark, пока пользователь не выбрал тему
+  //    явно (сохранённое 'theme-light'/'theme-dark' не трогаем).
+  //    Скрипт стоит в <head> ДО бандла — Theme.svelte прочитает уже наш выбор.
+  try {
+    var mmTheme = localStorage.getItem('theme')
+    if (mmTheme === null || mmTheme === 'theme-system') localStorage.setItem('theme', 'theme-dark')
+  } catch (e) { /* приватный режим — пропускаем */ }
+
   // ── Провайдеры: инъекция в соц-grid auth-панели
   function injectProviders () {
     var backd = document.querySelector('div.backd')
