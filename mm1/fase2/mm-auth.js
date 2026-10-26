@@ -1,43 +1,99 @@
 /* ============================================================
-   MM-AUTH.JS — «Мудромашина» auth (DEV-2510-07, Фаза 3): кнопки провайдеров.
-   Вставляет «Войти с Яндекс ID» / «Войти со Сбер ID» в РОДНОЙ пустой grid
-   соц-логина панели (div.grid[style*=repeat(2, 1fr)], пустой — бандл его
-   рендерит под кнопкой «Вход», но не наполняет без OAuth-конфига).
-   HTML-only заглушки (Фаза 4 = реальные OAuth-эндпоинты, ждёт решений владельца).
-   Загружается в ОБОИХ HTML (login/index — один SPA-шаблон), поэтому:
-   — работает ТОЛЬКО при наличии div.backd (auth-экран), в воркбенче молчит;
-   — idempotent (data-mm-providers), выживает перерисовки через MutationObserver.
+   MM-AUTH.JS — «Мудромашина» auth (DEV-2510-07/08, Фаза 3+4a).
+   1) Кнопки провайдеров «Войти с Яндекс ID» / «Войти со Сбер ID»
+      вставляются в РОДНОЙ пустой grid соц-логина панели
+      (div.grid[style*=repeat(2, 1fr)]). Заглушки HTML-only
+      (OAuth-эндпоинты — отдельная фаза, ждёт владельца).
+      DEV-2510-08: вместо рисованных абстракций — ОФИЦИАЛЬНЫЕ
+      знаки брендов: Я-глиф из продакшн-ассетов Яндекс ID
+      (passport.yandex.ru) и знак Сбера из Sberbank_Logo_2020
+      (6 фирменных градиентов, Wikimedia/официальный брендбук).
+   2) DEV-2510-08 (П.4): ссылка «Связаться с нами» в сайдбаре
+      воркбенча (link.huly.io/slack) → https://mudromashina.ru
+      (runtime-патч: константа зашита в бандл, патчим href якоря).
+   Загружается в ОБОИХ HTML (login/index — один SPA-шаблон):
+   — провайдеры: только при div.backd (auth-экран), в воркбенче молчат;
+   — сайдбар-патч: только в воркбенче (когда div.backd исчез);
+   — idempotent, выживает перерисовки через MutationObserver.
    ============================================================ */
 ;(function () {
   if (window.__mmAuthProviders) return
   window.__mmAuthProviders = true
 
+  // ── Официальный знак Яндекс ID: красный круг + белый глиф «Я»
+  //    (глиф — из вордмарка «Яндекс» продакшн-паспорта, bbox 0.25..19.04 × 3..25.67)
   var SVG_YA =
-    '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-    '<circle cx="12" cy="12" r="12" fill="#FC3F1D"/>' +
-    '<path d="M13.7 19h2.5V5h-3.4C10 5 8.2 6.9 8.2 9.4c0 2.2 1.2 3.6 3 4.1L8 19h2.7l2.9-5.8h-1.2c-1.6 0-2.6-.8-2.6-2.4 0-1.6 1-2.6 2.7-2.6h1.2V19z" fill="#fff"/>' +
-    '</svg>'
-  var SVG_SBER =
-    '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-    '<defs><linearGradient id="mmSberG" x1="0" y1="1" x2="1" y2="0">' +
-    '<stop offset="0" stop-color="#0F5C30"/><stop offset=".5" stop-color="#21A038"/><stop offset="1" stop-color="#8FE08A"/>' +
-    '</linearGradient></defs>' +
-    '<circle cx="12" cy="12" r="12" fill="url(#mmSberG)"/>' +
-    '<path d="M12 5.4a6.6 6.6 0 1 0 6.3 8.6" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round"/>' +
-    '<path d="M18.6 6.2v4.4h-4.4z" fill="#fff"/>' +
-    '</svg>'
+    '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#FC3F1D"/><g transform="translate(6.554 3.906) scale(0.5646)"><path d="M11.6317 25.6714V21.8206C11.6317 18.916 11.2769 18.0749 10.1597 15.6566L4.36371 3H0.25L7.68886 19.1789V25.6714H11.6317ZM14.2077 13.9611L19.0443 3H15.0357L10.1991 13.9611H14.2077Z" fill="#fff"/></g></svg>'
+  // ── Официальный знак Сбера (2020): градиентная дуга + зелёная галочка,
+  //    6 фирменных градиентов (Sberbank_Logo_2020, брендбук)
+    var SVG_SBER =
+    '<svg viewBox="0 0 47.5 47.5"><defs><linearGradient id="mmSb0" gradientUnits="userSpaceOnUse" x1="2.1' +
+    '707" y1="13.4952" x2="0.311989" y2="8.08129" gradientTransform="matrix(2.932039,0,0,2.941176,0,0)"><' +
+    'stop offset="0.1444" style="stop-color:rgb(94.901961%,91.372549%,7.45098%);stop-opacity:1;"/><stop o' +
+    'ffset="0.3037" style="stop-color:rgb(90.588235%,89.803922%,9.411765%);stop-opacity:1;"/><stop offset' +
+    '="0.5823" style="stop-color:rgb(79.215686%,85.882353%,14.901961%);stop-opacity:1;"/><stop offset="0.' +
+    '891" style="stop-color:rgb(63.921569%,80.392157%,22.352941%);stop-opacity:1;"/></linearGradient><lin' +
+    'earGradient id="mmSb1" gradientUnits="userSpaceOnUse" x1="2.88386" y1="2.28584" x2="7.60262" y2="0.4' +
+    '73823" gradientTransform="matrix(2.932039,0,0,2.941176,0,0)"><stop offset="0.0592" style="stop-color' +
+    ':rgb(5.882353%,65.882353%,87.843137%);stop-opacity:1;"/><stop offset="0.5385" style="stop-color:rgb(' +
+    '0%,60%,97.647059%);stop-opacity:1;"/><stop offset="0.9234" style="stop-color:rgb(0.784314%,56.862745' +
+    '%,92.156863%);stop-opacity:1;"/></linearGradient><linearGradient id="mmSb2" gradientUnits="userSpace' +
+    'OnUse" x1="7.42363" y1="14.4944" x2="13.0491" y2="13.2133" gradientTransform="matrix(2.932039,0,0,2.' +
+    '941176,0,0)"><stop offset="0.1226" style="stop-color:rgb(63.921569%,80.392157%,22.352941%);stop-opac' +
+    'ity:1;"/><stop offset="0.2846" style="stop-color:rgb(52.54902%,76.470588%,22.352941%);stop-opacity:1' +
+    ';"/><stop offset="0.8693" style="stop-color:rgb(12.941176%,62.745098%,21.960784%);stop-opacity:1;"/>' +
+    '</linearGradient><linearGradient id="mmSb3" gradientUnits="userSpaceOnUse" x1="7.56102" y1="1.30945"' +
+    ' x2="12.2382" y2="2.76364" gradientTransform="matrix(2.932039,0,0,2.941176,0,0)"><stop offset="0.056' +
+    '6" style="stop-color:rgb(0.784314%,56.862745%,92.156863%);stop-opacity:1;"/><stop offset="0.79" styl' +
+    'e="stop-color:rgb(4.705882%,54.117647%,79.607843%);stop-opacity:1;"/></linearGradient><linearGradien' +
+    't id="mmSb4" gradientUnits="userSpaceOnUse" x1="2.54776" y1="13.7268" x2="7.57157" y2="15.6183" grad' +
+    'ientTransform="matrix(2.932039,0,0,2.941176,0,0)"><stop offset="0.1324" style="stop-color:rgb(94.901' +
+    '961%,91.372549%,7.45098%);stop-opacity:1;"/><stop offset="0.2977" style="stop-color:rgb(92.156863%,9' +
+    '0.588235%,8.627451%);stop-opacity:1;"/><stop offset="0.5306" style="stop-color:rgb(85.098039%,87.843' +
+    '137%,12.156863%);stop-opacity:1;"/><stop offset="0.8023" style="stop-color:rgb(73.333333%,83.921569%' +
+    ',17.647059%);stop-opacity:1;"/><stop offset="0.9829" style="stop-color:rgb(63.921569%,80.392157%,22.' +
+    '352941%);stop-opacity:1;"/></linearGradient><linearGradient id="mmSb5" gradientUnits="userSpaceOnUse' +
+    '" x1="1.4415" y1="8.32718" x2="3.45094" y2="3.05983" gradientTransform="matrix(2.932039,0,0,2.941176' +
+    ',0,0)"><stop offset="0.0698" style="stop-color:rgb(63.921569%,80.392157%,22.352941%);stop-opacity:1;' +
+    '"/><stop offset="0.2599" style="stop-color:rgb(50.588235%,77.254902%,37.254902%);stop-opacity:1;"/><' +
+    'stop offset="0.9216" style="stop-color:rgb(5.882353%,65.882353%,87.843137%);stop-opacity:1;"/></line' +
+    'arGradient></defs><path d="M 41.605469 9.546875 C 42.699219 10.976562 43.613281 12.542969 44.386719 ' +
+    '14.203125 L 23.3125 29.925781 L 14.460938 24.300781 L 14.460938 17.570312 L 23.265625 23.148438 Z M ' +
+    '41.605469 9.546875" fill="#21A038"/><path d="M 5.472656 23.839844 C 5.472656 23.515625 5.472656 23.2' +
+    '42188 5.519531 22.917969 L 0.183594 22.640625 C 0.183594 23.011719 0.136719 23.425781 0.136719 23.79' +
+    '2969 C 0.136719 30.25 2.738281 36.105469 6.933594 40.347656 L 10.71875 36.519531 C 7.480469 33.29296' +
+    '9 5.472656 28.820312 5.472656 23.839844 Z M 5.472656 23.839844" fill="url(#mmSb0)"/><path d="M 23.26' +
+    '5625 5.855469 C 23.585938 5.855469 23.859375 5.855469 24.179688 5.902344 L 24.453125 0.507812 C 24.0' +
+    '85938 0.507812 23.675781 0.460938 23.3125 0.460938 C 16.925781 0.460938 11.132812 3.089844 6.933594 ' +
+    '7.332031 L 10.71875 11.160156 C 13.914062 7.886719 18.382812 5.855469 23.265625 5.855469 Z M 23.2656' +
+    '25 5.855469" fill="url(#mmSb1)"/><path d="M 23.265625 41.824219 C 22.945312 41.824219 22.671875 41.8' +
+    '24219 22.351562 41.777344 L 22.078125 47.171875 C 22.445312 47.171875 22.855469 47.21875 23.21875 47' +
+    '.21875 C 29.605469 47.21875 35.402344 44.589844 39.597656 40.347656 L 35.8125 36.519531 C 32.617188 ' +
+    '39.839844 28.191406 41.824219 23.265625 41.824219 Z M 23.265625 41.824219" fill="url(#mmSb2)"/><path' +
+    ' d="M 33.300781 8.992188 L 37.816406 5.625 C 33.847656 2.398438 28.785156 0.414062 23.265625 0.41406' +
+    '2 L 23.265625 5.808594 C 27.007812 5.855469 30.472656 7.007812 33.300781 8.992188 Z M 33.300781 8.99' +
+    '2188" fill="url(#mmSb3)"/><path d="M 46.441406 23.839844 C 46.441406 22.410156 46.304688 21.027344 4' +
+    '6.074219 19.644531 L 41.101562 23.378906 C 41.101562 23.515625 41.101562 23.703125 41.101562 23.8398' +
+    '44 C 41.101562 29.144531 38.820312 33.894531 35.21875 37.167969 L 38.820312 41.179688 C 43.476562 36' +
+    '.9375 46.441406 30.710938 46.441406 23.839844 Z M 46.441406 23.839844" fill="#21A038"/><path d="M 23' +
+    '.265625 41.824219 C 18.019531 41.824219 13.320312 39.519531 10.082031 35.875 L 6.113281 39.519531 C ' +
+    '10.355469 44.269531 16.46875 47.21875 23.265625 47.21875 Z M 23.265625 41.824219" fill="url(#mmSb4)"' +
+    '/><path d="M 11.359375 10.511719 L 7.753906 6.5 C 3.054688 10.789062 0.136719 16.96875 0.136719 23.8' +
+    '39844 L 5.472656 23.839844 C 5.472656 18.582031 7.753906 13.789062 11.359375 10.511719 Z M 11.359375' +
+    ' 10.511719" fill="url(#mmSb5)"/></svg>'
 
-  function mkButton(label, svg) {
+  function mkButton (label, svg) {
     var b = document.createElement('button')
     b.type = 'button'
     b.className = 'antiButton default mm-provider'
     b.innerHTML = '<span class="mm-p-ico">' + svg + '</span><span>' + label + '</span>'
-    // HTML-only заглушка: никаких действий до Фазы 4 (OAuth)
+    // HTML-only заглушка: никаких действий до Фазы OAuth
     b.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation() })
     return b
   }
 
-  function inject() {
+  // ── Провайдеры: инъекция в соц-grid auth-панели
+  function injectProviders () {
     var backd = document.querySelector('div.backd')
     if (!backd) return false
     var panel = backd.querySelector('.panel-base.panel') || backd.querySelector('.panel-base')
@@ -57,11 +113,31 @@
     return true
   }
 
-  // Панель рендерится асинхронно (SPA) — наблюдаем до успеха; после успеха
-  // продолжаем дешёвый контроль (перерисовка вкладки может пересоздать grid).
-  function start() {
-    if (inject()) return
-    var mo = new MutationObserver(function () { inject() })
+  // ── П.4: сайдбар воркбенча — «Связаться с нами» (link.huly.io/slack и иные
+  //    huly-ссылки поддержки) → mudromashina.ru. Idempotent по data-атрибуту.
+  var MM_SUPPORT_URL = 'https://mudromashina.ru'
+  function patchSupportLinks () {
+    if (document.querySelector('div.backd')) return // auth-экран — сайдбара ещё нет
+    var anchors = document.querySelectorAll('a[href*="link.huly.io"], a[href*="huly.link"]')
+    for (var i = 0; i < anchors.length; i++) {
+      var a = anchors[i]
+      if (a.getAttribute('data-mm-support') !== '1') {
+        a.setAttribute('data-mm-support', '1')
+        a.setAttribute('href', MM_SUPPORT_URL)
+        if (a.hasAttribute('target')) a.setAttribute('target', '_self')
+      }
+    }
+  }
+
+  // Панель/сайдбар рендерятся асинхронно (SPA) — наблюдаем постоянно;
+  // колбэки дешёвые и idempotent, выживают перерисовки вкладок.
+  function start () {
+    injectProviders()
+    patchSupportLinks()
+    var mo = new MutationObserver(function () {
+      injectProviders()
+      patchSupportLinks()
+    })
     mo.observe(document.body, { childList: true, subtree: true })
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start)

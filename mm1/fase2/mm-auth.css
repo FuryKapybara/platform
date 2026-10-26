@@ -248,10 +248,14 @@ div.backd .panel-base.panel button.mm-provider .mm-p-ico svg {
 }
 
 /* ── 8. Гостевая кнопка — крупная (DEV-2510-07, Фаза 3).
-   Блок .actions в бандле имеет inline margin-inline-start: 5rem — сбрасываем ── */
+   DEV-2510-08 (правка владельца): контейнер .actions прижат к границам шейпа —
+   возвращаем боковые отступы РАВНЫ паддингу формы (padding: 4rem 5rem →
+   margin-inline: 5rem), чтобы «Войти с кодом» и гостевая кнопка стояли
+   вровень с инпутами и кнопкой «Вход» выше ── */
 div.backd .panel-base.panel .actions {
-  margin-inline-start: 0 !important;
-  width: 100%;
+  margin-inline-start: 5rem !important;
+  margin-inline-end: 5rem !important;
+  width: auto;
 }
 div.backd .panel-base.panel .actions .login-as-guest a {
   display: inline-flex !important;
@@ -303,9 +307,12 @@ div.backd.paneld .panel-base button.mm-provider:hover {
   background: rgba(213, 255, 64, 0.1) !important;
   border-color: rgba(213, 255, 64, 0.55) !important;
 }
+/* DEV-2510-08: мобилка — form padding 0.25rem 1.25rem, поэтому отступ 1.25rem
+   (бандл сам ставит inline margin-inline-start: 1.25rem — согласуем и торец) */
 div.backd.paneld .panel-base .actions {
-  margin-inline-start: 0 !important;
-  width: 100%;
+  margin-inline-start: 1.25rem !important;
+  margin-inline-end: 1.25rem !important;
+  width: auto;
 }
 div.backd.paneld .panel-base .actions .login-as-guest a {
   display: inline-flex !important;
@@ -328,3 +335,96 @@ div.backd.paneld .panel-base .actions .login-as-guest a:hover {
   border-color: #d5ff40 !important;
   color: #d5ff40 !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   10. WORKBENCH THEME (DEV-2510-08, правка владельца №3): фирменные цвета
+   UI платформы. Кнопки #205dc2 → lime #b7e200 (+ чёрный текст), основной фон
+   #050505, второстепенный #0d0d0d, hover/выделение всего кликабельного — lime.
+   Механика: CSS-переменные Huly резолвятся в момент использования, поэтому
+   переопределение деклараций переменных с !important перекрашивает бандл
+   без пересборки. Скоуп:
+     html.theme-dark #ui-root:not(:has(div.backd))  — только тёмная тема
+     (класс на <html>, Theme.svelte) и ТОЛЬКО воркбенч (auth-экран div.backd
+     исключён: его glass-переменные не задеваем).
+   Кнопки — вне theme-скоупа: lime-кнопки читаемы в обеих темах.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 10.1 Кнопки: primary #205dc2 → lime punch #b7e200 + чёрный шрифт (обе темы) */
+#ui-root:not(:has(div.backd)),
+#ui-root:not(:has(div.backd)) * {
+  --primary-button-default: #b7e200 !important;
+  --primary-button-hovered: #c6f526 !important;
+  --primary-button-pressed: #a2cc00 !important;
+  --primary-button-focused: #b7e200 !important;
+  --primary-button-color: #06070a !important;
+  --primary-button-content-color: rgba(0, 0, 0, 0.78) !important;
+  --primary-button-outline: #b7e200 !important;
+  --primary-button-transparent: rgba(183, 226, 0, 0.2) !important;
+  --primary-edit-border-color: #b7e200 !important;
+}
+
+/* 10.2 Тёмная тема: фоны #050505 / #0d0d0d + lime-hover на кликабельном */
+html.theme-dark #ui-root:not(:has(div.backd)),
+html.theme-dark #ui-root:not(:has(div.backd)) * {
+  /* фоны: основной холст #050505, второстепенные поверхности #0d0d0d */
+  --theme-drawing-bg-color: #050505 !important;
+  --theme-bg-color: #050505 !important;
+  --theme-back-color: #050505 !important;
+  --theme-statusbar-color: #050505 !important;
+  --theme-inbox-activity-bgcolor: #050505 !important;
+  --theme-navpanel-color: #0d0d0d !important;
+  --theme-panel-color: #0d0d0d !important;
+  --theme-comp-header-color: #0d0d0d !important;
+  --theme-popup-color: #0d0d0d !important;
+  --theme-popup-trans-color: #0d0d0dee !important;
+  --theme-dialog-background-color: #0d0d0d !important;
+  --theme-list-row-color: #0d0d0d !important;
+  --theme-list-subheader-color: #0d0d0d !important;
+  --theme-list-button-color: #0d0d0d !important;
+  --theme-link-button-color: #0d0d0d !important;
+  --theme-table-header-color: #0d0d0d !important;
+  --theme-table-row-color: #0d0d0d !important;
+  --theme-popup-deactivated: #0d0d0d !important;
+  --accent-bg-color: #0d0d0d !important;
+  --theme-bg-divider-color: #161616 !important;
+  --theme-code-bg-color: #101408 !important;
+
+  /* hover / выделение всего кликабельного → lime (#b7e200 поверх тёмного) */
+  --highlight-hover: rgba(183, 226, 0, 0.13) !important;
+  --highlight-select: rgba(183, 226, 0, 0.18) !important;
+  --highlight-select-hover: rgba(183, 226, 0, 0.24) !important;
+  --highlight-select-border: rgba(183, 226, 0, 0.4) !important;
+  --menu-bg-select: rgba(183, 226, 0, 0.15) !important;
+  --menu-bg-select-trans: rgba(183, 226, 0, 0.35) !important;
+  --theme-navpanel-hovered: rgba(183, 226, 0, 0.1) !important;
+  --theme-navpanel-selected: rgba(183, 226, 0, 0.17) !important;
+  --theme-popup-hover: rgba(183, 226, 0, 0.12) !important;
+  --theme-list-button-hover: rgba(183, 226, 0, 0.12) !important;
+  --theme-link-button-hover: rgba(183, 226, 0, 0.12) !important;
+  --theme-breadcrumb-hovered: rgba(183, 226, 0, 0.08) !important;
+  --theme-editbox-focus-color: rgba(183, 226, 0, 0.06) !important;
+  --theme-editbox-focus-border: #b7e200 !important;
+
+  /* акценты, ссылки, фокус, caret — lime */
+  --theme-link-color: #b7e200 !important;
+  --theme-state-primary-color: #b7e200 !important;
+  --theme-state-primary-background-color: rgba(183, 226, 0, 0.14) !important;
+  --theme-state-primary-border-color: rgba(183, 226, 0, 0.26) !important;
+  --theme-tablist-plain-color: #b7e200 !important;
+  --theme-caret-color: #b7e200 !important;
+  --theme-toggle-on-bg-color: #b7e200 !important;
+  --theme-toggle-on-bg-hover: #a2cc00 !important;
+  --theme-calendar-today-bgcolor: rgba(183, 226, 0, 0.1) !important;
+  --theme-calendar-event-handle-color: #b7e200 !important;
+  --theme-calendar-zone: rgba(183, 226, 0, 0.1) !important;
+  --theme-mention-bg-color: rgba(183, 226, 0, 0.1) !important;
+  --theme-mention-focused-bg-color: rgba(183, 226, 0, 0.2) !important;
+  --theme-inbox-people-counter-bgcolor: rgba(183, 226, 0, 0.14) !important;
+  --theme-inbox-people-notify: #b7e200 !important;
+}
+
+/* 10.3 База страницы воркбенча (вне auth-экрана) — фирменный чёрный */
+body:not(:has(div.backd)) {
+  background: #050505 !important;
+}
+
