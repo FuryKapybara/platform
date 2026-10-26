@@ -1,2 +1,8 @@
 class: card:class:Tag
 title: Торговец
+properties:
+  - label: Продаёт краденое
+    type: TypeBoolean
+  - label: Инвентарь
+    refTo: '../../Item.yaml'
+    isArray: true
