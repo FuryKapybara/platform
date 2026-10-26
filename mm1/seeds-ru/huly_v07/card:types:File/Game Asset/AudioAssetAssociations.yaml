@@ -1,0 +1,6 @@
+class: core:class:Association
+typeA: './Audio Asset.yaml'
+typeB: '../../Game Component.yaml'
+nameA: Использует звук
+nameB: Звук для
+type: 'N:N'

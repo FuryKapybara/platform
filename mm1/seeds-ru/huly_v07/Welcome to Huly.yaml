@@ -1,0 +1,10 @@
+class: tracker:class:Project
+id: tracker:project:DefaultProject
+title: Добро пожаловать в Мудромашину CRM!
+identifier: MM
+emoji: 🌟
+autoJoin: true
+members: 
+  - ${creatorName@global}
+owners: 
+  - ${creatorName@global}

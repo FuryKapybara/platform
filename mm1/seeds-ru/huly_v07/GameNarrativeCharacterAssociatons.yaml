@@ -1,0 +1,6 @@
+class: core:class:Association
+typeA: './card:types:Document/Game Narrative.yaml'
+typeB: './Game Component/Character.yaml'
+nameA: Входит в
+nameB: Фигурирует в
+type: 'N:N'

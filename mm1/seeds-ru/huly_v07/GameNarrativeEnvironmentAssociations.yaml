@@ -1,0 +1,6 @@
+class: core:class:Association
+typeA: './card:types:Document/Game Narrative.yaml'
+typeB: './Game Component/Environment.yaml'
+nameA: Место действия для
+nameB: Места действия
+type: 'N:N'

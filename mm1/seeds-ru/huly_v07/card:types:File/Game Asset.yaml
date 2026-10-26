@@ -1,0 +1,9 @@
+class: card:class:MasterTag
+title: Игровой ассет
+properties:
+  - label: Название ассета
+    type: TypeString
+  - label: Описание
+    type: TypeString
+  - label: Формат файла
+    enumOf: './File Format.yaml'

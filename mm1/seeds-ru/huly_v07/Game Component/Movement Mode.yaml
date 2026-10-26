@@ -1,0 +1,6 @@
+class: core:class:Enum
+title: Режим перемещения
+values:
+  - '🏃 Земля'
+  - '🦅 Воздух'
+  - '🌊 Вода'

@@ -1,0 +1,14 @@
+class: card:class:MasterTag
+title: Персонаж
+properties:
+  - label: Скорость
+    type: TypeNumber
+  - label: Высота прыжка
+    type: TypeNumber
+  - label: Режим перемещения
+    enumOf: './Movement Mode.yaml'
+    isArray: true
+  - label: Макс. здоровье
+    type: TypeNumber
+  - label: Выносливость
+    type: TypeNumber

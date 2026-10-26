@@ -1,0 +1,6 @@
+class: core:class:Association
+typeA: './Image Asset.yaml'
+typeB: '../../Game Component.yaml'
+nameA: Изображён на
+nameB: Изображает
+type: 'N:N'

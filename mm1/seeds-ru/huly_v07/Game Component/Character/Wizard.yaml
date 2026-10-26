@@ -1,0 +1,5 @@
+class: card:class:Tag
+title: Маг
+properties:
+  - label: Мана
+    type: TypeNumber

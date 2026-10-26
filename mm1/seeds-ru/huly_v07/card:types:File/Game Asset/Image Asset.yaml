@@ -1,0 +1,7 @@
+class: card:class:MasterTag
+title: Изображение
+properties:
+  - label: Размеры
+    type: TypeString
+  - label: Прозрачность
+    type: TypeBoolean

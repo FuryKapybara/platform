@@ -1,0 +1,10 @@
+class: core:class:Enum
+title: Формат файла
+values:
+  - PNG
+  - JPG
+  - GIF
+  - MP4
+  - MP3
+  - WAV
+  - MOV

@@ -1,0 +1,9 @@
+class: card:class:MasterTag
+title: Аудио-ассет
+properties:
+  - label: Назначение аудио
+    enumOf: './Audio Purpose.yaml'
+  - label: Длительность
+    type: TypeString
+  - label: Зацикливание
+    type: TypeBoolean

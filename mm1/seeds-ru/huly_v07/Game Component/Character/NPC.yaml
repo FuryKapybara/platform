@@ -1,0 +1,5 @@
+class: card:class:MasterTag
+title: NPC
+properties:
+  - label: Характер
+    enumOf: './Alignment.yaml'

@@ -1,0 +1,9 @@
+class: document:class:Teamspace
+title: Быстрый старт
+description: Короткие гайды, чтобы выжать из Мудромашины CRM максимум!
+emoji: 📝
+autoJoin: true
+members: 
+  - ${creatorName@global}
+owners: 
+  - ${creatorName@global}

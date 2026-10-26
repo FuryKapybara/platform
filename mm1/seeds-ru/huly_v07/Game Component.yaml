@@ -1,0 +1,7 @@
+class: card:class:MasterTag
+title: Игровой компонент
+properties:
+  - label: Название
+    type: TypeString
+  - label: Описание
+    type: TypeString

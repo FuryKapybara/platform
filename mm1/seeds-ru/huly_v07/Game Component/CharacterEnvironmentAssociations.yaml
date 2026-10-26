@@ -1,0 +1,6 @@
+class: core:class:Association
+typeA: './Character.yaml'
+typeB: './Environment.yaml'
+nameA: Населён
+nameB: Существует в
+type: 'N:N'

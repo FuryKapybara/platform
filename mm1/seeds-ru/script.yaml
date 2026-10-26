@@ -1,0 +1,284 @@
+- name: 'huly'
+  default: true
+  steps:
+    - type: 'update'
+      _class: 'core:class:PluginConfiguration'
+      data:
+        _id: 'plugin-configuration-calendar'
+        enabled: true
+        space: 'core:space:Model'
+    - type: 'update'
+      _class: 'core:class:PluginConfiguration'
+      data:
+        _id: 'plugin-configuration-recruit'
+        enabled: false
+        space: 'core:space:Model'
+    - type: 'create'
+      _class: 'contact:class:Person'
+      resultVariable: creatorPerson
+      data:
+        space: contact:space:Contacts
+        name: ${creatorName@global}
+        personUuid: ${creatorUuid@global}
+        city: ''
+        avatarType: 'color'
+        avatarProps:
+          color: '#f868bc'
+    - type: 'mixin'
+      _class: 'contact:class:Person'
+      mixin: 'contact:mixin:Employee'
+      data:
+        space: contact:space:Contacts
+        _id: ${creatorPerson}
+        active: true
+    - type: 'create'
+      _class: 'contact:class:SocialIdentity'
+      data:
+        _id: ${creatorSocialId@global}
+        space: 'contact:space:Contacts'
+        collection: 'socialIds'
+        attachedTo: ${creatorPerson}
+        attachedToClass: 'contact:class:Person'
+        key: ${creatorSocialKey@global}
+        type: ${creatorSocialType@global}
+        value: ${creatorSocialValue@global}
+        confirmed: true
+    - type: 'import'
+      path: './huly_v07'
+- name: 'staging-dev'
+  steps:
+    - type: 'update'
+      _class: 'core:class:PluginConfiguration'
+      data:
+        _id: 'plugin-configuration-calendar'
+        enabled: true
+        space: 'core:space:Model'
+    - type: 'update'
+      _class: 'core:class:PluginConfiguration'
+      data:
+        _id: 'plugin-configuration-recruit'
+        enabled: false
+        space: 'core:space:Model'
+    - type: 'create'
+      _class: 'contact:class:Person'
+      resultVariable: creatorPerson
+      data:
+        space: contact:space:Contacts
+        name: ${creatorName@global}
+        personUuid: ${creatorUuid@global}
+        city: ''
+        avatarType: 'color'
+        avatarProps:
+          color: '#f868bc'
+    - type: 'mixin'
+      _class: 'contact:class:Person'
+      mixin: 'contact:mixin:Employee'
+      data:
+        space: contact:space:Contacts
+        _id: ${creatorPerson}
+        active: true
+    - type: 'create'
+      _class: 'contact:class:SocialIdentity'
+      data:
+        _id: ${creatorSocialId@global}
+        space: 'contact:space:Contacts'
+        collection: 'socialIds'
+        attachedTo: ${creatorPerson}
+        attachedToClass: 'contact:class:Person'
+        key: ${creatorSocialKey@global}
+        type: ${creatorSocialType@global}
+        value: ${creatorSocialValue@global}
+        confirmed: true
+    - type: 'import'
+      path: './huly_v07'
+- name: 'tracex-init'
+  default: false
+  steps:
+    - type: 'update'
+      _class: 'core:class:PluginConfiguration'
+      data:
+        _id: 'plugin-configuration-calendar'
+        enabled: true
+        space: 'core:space:Model'
+    - type: 'update'
+      _class: 'core:class:PluginConfiguration'
+      data:
+        _id: 'plugin-configuration-documents'
+        enabled: true
+        space: 'core:space:Model'
+    - type: 'update'
+      _class: 'core:class:PluginConfiguration'
+      data:
+        _id: 'plugin-configuration-training'
+        enabled: true
+        space: 'core:space:Model'
+    - type: 'update'
+      _class: 'core:class:PluginConfiguration'
+      data:
+        _id: 'plugin-configuration-products'
+        enabled: true
+        space: 'core:space:Model'
+    - type: 'update'
+      _class: 'core:class:PluginConfiguration'
+      data:
+        _id: 'plugin-configuration-recruit'
+        enabled: false
+        space: 'core:space:Model'
+    - type: 'create'
+      _class: 'contact:class:Person'
+      resultVariable: creatorPerson
+      data:
+        space: contact:space:Contacts
+        name: ${creatorName@global}
+        personUuid: ${creatorUuid@global}
+        city: ''
+        avatarType: 'color'
+        avatarProps:
+          color: '#f868bc'
+    - type: 'mixin'
+      _class: 'contact:class:Person'
+      mixin: 'contact:mixin:Employee'
+      data:
+        space: contact:space:Contacts
+        _id: ${creatorPerson}
+        active: true
+    - type: 'create'
+      _class: 'contact:class:SocialIdentity'
+      data:
+        _id: ${creatorSocialId@global}
+        space: 'contact:space:Contacts'
+        collection: 'socialIds'
+        attachedTo: ${creatorPerson}
+        attachedToClass: 'contact:class:Person'
+        key: ${creatorSocialKey@global}
+        type: ${creatorSocialType@global}
+        value: ${creatorSocialValue@global}
+        confirmed: true
+    - type: 'import'
+      path: './tracex_v07'
+    - type: 'bulkUpdate'
+      _class: 'documents:mixin:DocumentTemplate'
+      data:
+        state: 'effective'
+    - type: 'create'
+      _class: 'core:class:Configuration'
+      data:
+        _id: 'setting:ids:DisablePermissionsConfiguration'
+        space: 'core:space:Workspace'
+        enabled: true
+- name: 'tracex-init-v07'
+  default: false
+  steps:
+    - type: 'update'
+      _class: 'core:class:PluginConfiguration'
+      data:
+        _id: 'plugin-configuration-calendar'
+        enabled: true
+        space: 'core:space:Model'
+    - type: 'update'
+      _class: 'core:class:PluginConfiguration'
+      data:
+        _id: 'plugin-configuration-documents'
+        enabled: true
+        space: 'core:space:Model'
+    - type: 'update'
+      _class: 'core:class:PluginConfiguration'
+      data:
+        _id: 'plugin-configuration-training'
+        enabled: true
+        space: 'core:space:Model'
+    - type: 'update'
+      _class: 'core:class:PluginConfiguration'
+      data:
+        _id: 'plugin-configuration-products'
+        enabled: true
+        space: 'core:space:Model'
+    - type: 'update'
+      _class: 'core:class:PluginConfiguration'
+      data:
+        _id: 'plugin-configuration-recruit'
+        enabled: false
+        space: 'core:space:Model'
+    - type: 'create'
+      _class: 'contact:class:Person'
+      resultVariable: creatorPerson
+      data:
+        space: contact:space:Contacts
+        name: ${creatorName@global}
+        personUuid: ${creatorUuid@global}
+        city: ''
+        avatarType: 'color'
+        avatarProps:
+          color: '#f868bc'
+    - type: 'mixin'
+      _class: 'contact:class:Person'
+      mixin: 'contact:mixin:Employee'
+      data:
+        space: contact:space:Contacts
+        _id: ${creatorPerson}
+        active: true
+    - type: 'create'
+      _class: 'contact:class:SocialIdentity'
+      data:
+        _id: ${creatorSocialId@global}
+        space: 'contact:space:Contacts'
+        collection: 'socialIds'
+        attachedTo: ${creatorPerson}
+        attachedToClass: 'contact:class:Person'
+        key: ${creatorSocialKey@global}
+        type: ${creatorSocialType@global}
+        value: ${creatorSocialValue@global}
+        confirmed: true
+    - type: 'import'
+      path: './tracex_v07'
+    - type: 'bulkUpdate'
+      _class: 'documents:mixin:DocumentTemplate'
+      data:
+        state: 'effective'
+    - type: 'create'
+      _class: 'core:class:Configuration'
+      data:
+        _id: 'setting:ids:DisablePermissionsConfiguration'
+        space: 'core:space:Workspace'
+        enabled: true
+- name: 'bold'
+  steps:
+    - type: 'update'
+      _class: 'core:class:PluginConfiguration'
+      data:
+        _id: 'plugin-configuration-calendar'
+        enabled: true
+        space: 'core:space:Model'
+    - type: 'update'
+      _class: 'core:class:PluginConfiguration'
+      data:
+        _id: 'plugin-configuration-recruit'
+        enabled: false
+        space: 'core:space:Model'
+    - type: 'create'
+      _class: 'contact:class:Person'
+      resultVariable: userPerson
+      data: 
+        space: contact:space:Contacts
+        name: 'New User'
+        city: ''
+        avatarType: 'color'
+        avatarProps:
+          color: '#f868bc'
+    - type: 'mixin'
+      _class: 'contact:class:Person'
+      mixin: 'contact:mixin:Employee'
+      data: 
+        space: contact:space:Contacts
+        _id: ${userPerson}
+        active: true
+    - type: 'create'
+      _class: 'contact:class:PersonAccount'
+      resultVariable: userAccount
+      data:
+        email: 'newuser@huly.io'
+        role: 'OWNER'
+        space: 'core:space:Model'
+        person: ${userPerson}
+    - type: 'import'
+      path: './bold'

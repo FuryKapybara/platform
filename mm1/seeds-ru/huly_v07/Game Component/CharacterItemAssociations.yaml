@@ -1,0 +1,6 @@
+class: core:class:Association
+typeA: './Character.yaml'
+typeB: './Item.yaml'
+nameA: Находится у
+nameB: Владеет
+type: 'N:N'

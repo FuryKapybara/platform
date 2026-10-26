@@ -1,0 +1,7 @@
+class: card:class:MasterTag
+title: Предмет
+properties:
+  - label: Тип предмета
+    enumOf: './Item Type.yaml'
+  - label: Редкость
+    enumOf: './Rarity.yaml'

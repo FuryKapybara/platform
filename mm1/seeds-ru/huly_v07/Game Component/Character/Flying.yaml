@@ -1,0 +1,5 @@
+class: card:class:Tag
+title: Полёт
+properties:
+  - label: Скорость полёта
+    type: TypeNumber
